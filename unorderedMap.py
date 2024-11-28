@@ -76,7 +76,7 @@ class UnorderedMap:
     def getSize(self):
         return self.mapSize
 
-    # Gets the top 100 words in the map (O(n) complexity)
+    # Gets the top 100 words in the map (has O(100n)->O(n) complexity)
     def getTop100(self):
         topWords = []
 

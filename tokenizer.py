@@ -1,8 +1,8 @@
 # Import libraries for normalizing and tokenizing
 from unorderedMap import UnorderedMap
-import re
 import nltk
 from nltk.tokenize import word_tokenize
+import re
 
 # If not installed, download punkt for tokenization
 try:
@@ -18,7 +18,7 @@ def readFile(file_path):
             yield line
 
 
-# Normalizes text by removing unwanted characters
+# Normalizes the text by removing unwanted characters
 def normalizeText(text):
     text = text.lower()
     text = re.sub(r'\d+', ' ', text)  # Removes numbers
@@ -43,5 +43,5 @@ umap = UnorderedMap()
 for i in tokens:
     umap.insert(i)
 
-# Prints all frequencies (unordered)
+# Prints the top 100 words
 print(umap.getTop100())
