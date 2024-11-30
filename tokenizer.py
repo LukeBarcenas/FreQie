@@ -1,5 +1,6 @@
 # Import libraries for normalizing and tokenizing
 from unorderedMap import UnorderedMap
+from maxHeap import MaxHeap
 import nltk
 from nltk.tokenize import word_tokenize
 import re
@@ -45,3 +46,9 @@ for i in tokens:
 
 # Prints the top 100 words
 print(umap.getTop100())
+
+import time
+start = time.time()
+
+heap = MaxHeap(tokens)
+heap.print_top_n(100)
