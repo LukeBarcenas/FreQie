@@ -7,8 +7,11 @@ from maxHeap import MaxHeap
 
 try:
     nltk.data.find('tokenizers/punkt')
+    nltk.data.find('tokenizers/punkt/punkt_tab')
+
 except LookupError:
     nltk.download('punkt')
+    nltk.download('punkt_tab')
 
 app = Flask(__name__)
 
