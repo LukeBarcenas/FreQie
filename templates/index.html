@@ -9,8 +9,8 @@
     <form method="POST">
         <label for="method">Choose Data Structure:</label>
         <select name="method" id="method">
-            <option value="unordered_map" {% if method == 'unordered_map' %}selected{% endif %}>Unordered Map</option>
-            <option value="max_heap" {% if method == 'max_heap' %}selected{% endif %}>Max Heap</option>
+            <option value="unordered_map" {% if method =='unordered_map' %}selected{% endif %}>Unordered Map</option>
+            <option value="max_heap" {% if method =='max_heap' %}selected{% endif %}>Max Heap</option>
         </select>
 
         <label for="n">Number of Top Words (1-100):</label>
@@ -21,25 +21,15 @@
 
     {% if top_words %}
     <h2>Top {{ n }} Words (using {{ method.replace('_', ' ').title() }})</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Word</th>
-                <th>Frequency</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for word_pair in top_words %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ word_pair[0] }}</td>
-                <td>{{ word_pair[1] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="word-container">
+        {% for word_pair in top_words %}
+        <div class="word-box">
+            <span class="rank">#{{ loop.index }}</span> |
+            <span class="word">{{ word_pair[0] }}</span> |
+            <span class="frequency">{{ word_pair[1] }}</span>
+        </div>
+        {% endfor %}
+    </div>
     {% endif %}
 </body>
 </html>
-
