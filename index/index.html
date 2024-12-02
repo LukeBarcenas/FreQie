@@ -30,9 +30,9 @@
             </tr>
         </thead>
         <tbody>
-            {% for idx, word_pair in enumerate(top_words) %}
+            {% for word_pair in top_words %}
             <tr>
-                <td>{{ idx + 1 }}</td>
+                <td>{{ loop.index }}</td>
                 <td>{{ word_pair[0] }}</td>
                 <td>{{ word_pair[1] }}</td>
             </tr>
