@@ -1,10 +1,12 @@
+# Import libraries for normalizing and tokenizing
 from flask import Flask, render_template, request
-import nltk
-import re
-from nltk.tokenize import word_tokenize
 from unorderedMap import UnorderedMap
 from maxHeap import MaxHeap
+import nltk
+from nltk.tokenize import word_tokenize
+import re
 
+# If not installed, download punkt for tokenization
 try:
     nltk.data.find('tokenizers/punkt')
     nltk.data.find('tokenizers/punkt/punkt_tab')
@@ -13,22 +15,37 @@ except LookupError:
     nltk.download('punkt')
     nltk.download('punkt_tab')
 
+# Initialize Flask app
 app = Flask(__name__)
 
-def preprocess_text():
+# Reads a file line by line
+def readFile(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            yield line
 
-    with open('docs/KJB.txt', 'r', encoding='utf-8') as file:
-        text = file.read()
-
+# Normalizes the text by removing unwanted characters
+def normalizeText(text):
     text = text.lower()
-    text = re.sub(r'\d+', ' ', text)
-    text = re.sub(r'[^\w\s]', '', text)
+    text = re.sub(r'\d+', ' ', text)  # Removes numbers
+    text = re.sub(r'[^\w\s]', '', text)  # Removes punctuation
+    return text
 
+# Tokenizes the text into words
+def tokenizeText(text):
     tokens = word_tokenize(text)
-
     return tokens
 
-tokens = preprocess_text()
+# Preprocess the text
+def preprocessText(file_path):
+    text = ''.join(readFile(file_path))
+    normalizedText = normalizeText(text)
+    tokens = tokenizeText(normalizedText)
+    return tokens
+
+# Preprocess tokens once for efficiency
+file_path = 'docs/KJB.txt'
+tokens = preprocessText(file_path)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -52,8 +69,7 @@ def index():
             umap = UnorderedMap()
             for token in tokens:
                 umap.insert(token)
-            top100 = umap.getTop100()
-            top_words = top100[:n] 
+            top_words = umap.getTop100()[:n]
         elif method == 'max_heap':
             heap = MaxHeap(tokens)
             top_n = heap.top_n(n)
