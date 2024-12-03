@@ -3,33 +3,114 @@
 <head>
     <title>Word Frequencies in KJV Bible</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        // Refreshes the data structures used based on config input
+        function refreshConfig() {
+            const topWordsDataStructure = document.getElementById('topWordsDataStructure').value;
+            const searchDataStructure = document.getElementById('searchDataStructure').value;
+
+            fetch('/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topWordsDataStructure,
+                    searchDataStructure
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reformat top words
+                const topWordsContainer = document.getElementById('topWordsContainer');
+                topWordsContainer.innerHTML = '';
+
+                data.topWords.forEach((wordPair, index) => {
+                    const wordBox = document.createElement('div');
+                    wordBox.className = 'wordBox';
+                    wordBox.innerHTML = `
+                        <span class="rank">#${index + 1}</span> |
+                        <span class="word">${wordPair[0]}</span> |
+                        <span class="frequency">${wordPair[1]}</span>
+                    `;
+                    topWordsContainer.appendChild(wordBox);
+                });
+            });
+        }
+
+        // Displays if word was found in the query
+        function searchWord() {
+            const searchQuery = document.getElementById('searchQuery').value;
+            const searchDataStructure = document.getElementById('searchDataStructure').value;
+
+            fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    searchQuery,
+                    searchDataStructure
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const searchResultContainer = document.getElementById('searchResultContainer');
+                searchResultContainer.innerHTML = ''; // Clear existing content
+
+                if (data.searchResult !== null) {
+                    searchResultContainer.innerHTML = `The word "<strong>${data.searchQuery}</strong>" appears <strong>${data.searchResult}</strong> times.`;
+                } else {
+                    searchResultContainer.innerHTML = `The word "<strong>${data.searchQuery}</strong>" was not found.`;
+                }
+            });
+        }
+    </script>
 </head>
 <body>
-    <h1>Word Frequencies in King James Version of the Bible</h1>
-    <form method="POST">
-        <label for="method">Choose Data Structure:</label>
-        <select name="method" id="method">
-            <option value="unordered_map" {% if method =='unordered_map' %}selected{% endif %}>Unordered Map</option>
-            <option value="max_heap" {% if method =='max_heap' %}selected{% endif %}>Max Heap</option>
-        </select>
+    <h1>Word Frequencies in King James Bible</h1>
 
-        <label for="n">Number of Top Words (1-100):</label>
-        <input type="number" name="n" id="n" value="{{ n }}" min="1" max="100">
-
-        <button type="submit">Get Top Words</button>
+    <!-- Search Section -->
+    <form onsubmit="event.preventDefault(); searchWord();">
+        <div>
+            <label for="searchQuery">Search for a Word:</label>
+            <input type="text" id="searchQuery" placeholder="Enter a word">
+        </div>
+        <button type="submit">Search Word</button>
     </form>
 
-    {% if top_words %}
-    <h2>Top {{ n }} Words (using {{ method.replace('_', ' ').title() }})</h2>
-    <div class="word-container">
-        {% for word_pair in top_words %}
-        <div class="word-box">
+    <div id="searchResultContainer"></div>
+
+    <hr>
+
+    <!-- Top Words Section -->
+    <h2>Top 100 Words</h2>
+    <div id="topWordsContainer">
+        {% for wordPair in topWords %}
+        <div class="wordBox">
             <span class="rank">#{{ loop.index }}</span> |
-            <span class="word">{{ word_pair[0] }}</span> |
-            <span class="frequency">{{ word_pair[1] }}</span>
+            <span class="word">{{ wordPair[0] }}</span> |
+            <span class="frequency">{{ wordPair[1] }}</span>
         </div>
         {% endfor %}
     </div>
-    {% endif %}
+
+    <hr>
+
+    <!-- Config Section -->
+    <h3>Config</h3>
+    <div>
+        <label for="topWordsDataStructure">Data Structure for Top Words:</label>
+        <select id="topWordsDataStructure">
+            <option value="maxHeap" {% if topWordsDataStructure =='maxHeap' %}selected{% endif %}>Max Heap</option>
+            <option value="unorderedMap" {% if topWordsDataStructure =='unorderedMap' %}selected{% endif %}>Unordered Map</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="searchDataStructure">Data Structure for Search:</label>
+        <select id="searchDataStructure">
+            <option value="unorderedMap" {% if searchDataStructure =='unorderedMap' %}selected{% endif %}>Unordered Map</option>
+            <option value="maxHeap" {% if searchDataStructure =='maxHeap' %}selected{% endif %}>Max Heap</option>
+        </select>
+    </div>
+
+    <button onclick="refreshConfig()">Refresh</button>
 </body>
 </html>

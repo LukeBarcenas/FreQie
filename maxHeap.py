@@ -1,22 +1,17 @@
-
 # Blessed Carlo Acutis, ora pro nobis
 class MaxHeap:
-    pq = []
-    tokens = []
-    word_counts = dict()
-
-    # initialized with all tokens
-
     def __init__(self, words):
-        words_set = set()
-        for word in words:
-            words_set.add(word)
-        for word in words_set:
-            self.tokens.append(word)
+        self.pq = []  # Priority queue for the heap
+        self.tokens = []  # Unique tokens
+        self.word_counts = {}  # Word frequency dictionary
+
+        words_set = set(words)  # Get unique words
+        self.tokens = list(words_set)  # Convert to list
         for word in words:
             if word not in self.word_counts:
                 self.word_counts[word] = 0
             self.word_counts[word] += 1
+
         self.insert_all(self.tokens)
 
     def insert(self, word):
@@ -137,6 +132,7 @@ class MaxHeap:
         return root
 
     def insert_all(self, tokens):
+        self.pq = []
         for token in tokens:
             self.insert(token)
 

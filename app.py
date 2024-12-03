@@ -1,5 +1,5 @@
 # Import libraries for normalizing and tokenizing
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from unorderedMap import UnorderedMap
 from maxHeap import MaxHeap
 import nltk
@@ -19,8 +19,8 @@ except LookupError:
 app = Flask(__name__)
 
 # Reads a file line by line
-def readFile(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
+def readFile(filePath):
+    with open(filePath, 'r', encoding='utf-8') as file:
         for line in file:
             yield line
 
@@ -37,45 +37,88 @@ def tokenizeText(text):
     return tokens
 
 # Preprocess the text
-def preprocessText(file_path):
-    text = ''.join(readFile(file_path))
+def preprocessText(filePath):
+    text = ''.join(readFile(filePath))
     normalizedText = normalizeText(text)
     tokens = tokenizeText(normalizedText)
     return tokens
 
+# Initializes the UnorderedMap
+def initializeUnorderedMap(tokens):
+    umap = UnorderedMap()
+    for token in tokens:
+        umap.insert(token)
+    return umap
+
+# Initializes the Heap
+def initializeMaxHeap(tokens):
+    return MaxHeap(tokens)
+
 # Preprocess tokens once for efficiency
-file_path = 'docs/KJB.txt'
-tokens = preprocessText(file_path)
+filePath = 'docs/KJB.txt'
+tokens = preprocessText(filePath)
 
-@app.route('/', methods=['GET', 'POST'])
+# Precompute once (Immutable)
+pcHeap = MaxHeap(tokens)
+pcTop100 = pcHeap.top_n(100)
+pcMap = UnorderedMap()
+for token in tokens:
+    pcMap.insert(token)
+
+# Display top 100 by default
+@app.route('/')
 def index():
-    top_words = []
-    method = 'unordered_map'
-    n = 100
+    return render_template(
+        'index.html',
+        topWords=pcTop100,
+        topWordsDataStructure="maxHeap",
+        searchDataStructure="unorderedMap",
+        searchQuery="",
+        searchResult=None
+    )
 
-    if request.method == 'POST':
-        method = request.form.get('method', 'unordered_map')
-        n_input = request.form.get('n', '100')
+@app.route('/refresh', methods=['POST'])
+def refresh():
+    # Reinitializea  map and heap based on config input
+    topWordsDataStructure = request.json.get("topWordsDataStructure", "maxHeap")
+    searchDataStructure = request.json.get("searchDataStructure", "unorderedMap")
+
+    topWords = []
+    if topWordsDataStructure == "maxHeap":
+        heap = MaxHeap(tokens)
+        rawTopWords = heap.top_n(100)
+        topWords = [(word, freq) for freq, word in rawTopWords]
+    elif topWordsDataStructure == "unorderedMap":
+        umap = UnorderedMap()
+        for token in tokens:
+            umap.insert(token)
+        rawTopWords = umap.getTop100()[:100]
+        topWords = rawTopWords
+
+    return jsonify({
+        "topWords": topWords,
+        "searchDataStructure": searchDataStructure,
+    })
+
+# Searches precomputed map/heap depending on config
+@app.route('/search', methods=['POST'])
+def search():
+    searchQuery = request.json.get("searchQuery", "").strip().lower()
+    searchDataStructure = request.json.get("searchDataStructure", "unorderedMap")
+    searchResult = None
+
+    if searchDataStructure == "unorderedMap":
         try:
-            n = int(n_input)
-            if n < 1:
-                n = 1
-            elif n > len(set(tokens)):
-                n = len(set(tokens))
-        except ValueError:
-            n = 100
+            searchResult = pcMap.search(searchQuery)
+        except KeyError:
+            searchResult = None
+    elif searchDataStructure == "maxHeap":
+        heap = MaxHeap(tokens)
+        result = heap.search(searchQuery)
+        if result != -1:
+            searchResult = result[0]
 
-        if method == 'unordered_map':
-            umap = UnorderedMap()
-            for token in tokens:
-                umap.insert(token)
-            top_words = umap.getTop100()[:n]
-        elif method == 'max_heap':
-            heap = MaxHeap(tokens)
-            top_n = heap.top_n(n)
-            top_words = [(word, freq) for freq, word in top_n]
-
-    return render_template('index.html', top_words=top_words, method=method, n=n)
+    return jsonify({"searchQuery": searchQuery, "searchResult": searchResult})
 
 if __name__ == '__main__':
     app.run(debug=True)

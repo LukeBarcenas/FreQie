@@ -16,12 +16,13 @@ form {
 }
 
 label {
-    margin-right: 10px;
+    display: block;
+    margin-bottom: 8px;
 }
 
 input, select {
     padding: 5px;
-    margin-right: 10px;
+    margin-bottom: 10px;
 }
 
 button {
@@ -30,6 +31,7 @@ button {
     color: white;
     border: none;
     cursor: pointer;
+    margin-top: 10px; /* Adds space above the button */
 }
 
 button:hover {
@@ -37,7 +39,7 @@ button:hover {
 }
 
 /* Word Container Styles */
-.word-container {
+.wordContainer {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -46,7 +48,7 @@ button:hover {
 }
 
 /* Word Box Styles */
-.word-box {
+.wordBox {
     background-color: #ffffff;
     border: 2px solid #ccc;
     border-radius: 8px;
@@ -60,6 +62,9 @@ button:hover {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Rank, Word, and Frequency Styles */
@@ -75,4 +80,15 @@ button:hover {
 
 .frequency {
     color: #249d3f;
+}
+
+/* Search Styles */
+.searchResult {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #303030;
+}
+
+.searchResult strong {
+    color: #0179fa;
 }
