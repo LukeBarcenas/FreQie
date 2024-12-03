@@ -11,8 +11,10 @@ import os
 # If not installed, download punkt for tokenization
 try:
     nltk.data.find('tokenizers/punkt')
+    nltk.data.find('tokenizers/punkt/punkt_tab')
 except LookupError:
     nltk.download('punkt')
+    nltk.download('punkt_tab')
 
 # Initialize Flask app
 app = Flask(__name__)
