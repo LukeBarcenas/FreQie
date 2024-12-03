@@ -10,6 +10,10 @@ h1 {
     color: #303030;
 }
 
+#subtitle {
+    font-weight: normal;
+}
+
 /* Input Styles */
 form {
     margin-bottom: 20px;
@@ -37,6 +41,19 @@ button {
 button:hover {
     background-color: #419845;
 }
+
+#fileUpload {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+#fileInput {
+    font-size: 16px;
+    margin-left: 70px;
+    cursor: pointer;
+}
+
 
 /* Word Container Styles */
 .wordContainer {

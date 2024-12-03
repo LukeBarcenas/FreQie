@@ -1,22 +1,25 @@
 # Import libraries for normalizing and tokenizing
 from flask import Flask, render_template, request, jsonify
+from werkzeug.utils import secure_filename
 from unorderedMap import UnorderedMap
 from maxHeap import MaxHeap
 import nltk
 from nltk.tokenize import word_tokenize
 import re
+import os
 
 # If not installed, download punkt for tokenization
 try:
     nltk.data.find('tokenizers/punkt')
-    nltk.data.find('tokenizers/punkt/punkt_tab')
-
 except LookupError:
     nltk.download('punkt')
-    nltk.download('punkt_tab')
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Set upload folder and max file upload size to 8MB
+app.config['UPLOAD_FOLDER'] = './docs'
+app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
 # Reads a file line by line
 def readFile(filePath):
@@ -54,19 +57,63 @@ def initializeUnorderedMap(tokens):
 def initializeMaxHeap(tokens):
     return MaxHeap(tokens)
 
-# Preprocess tokens once for efficiency
-filePath = 'docs/KJB.txt'
-tokens = preprocessText(filePath)
+# Placeholders for file processing
+tokens = []
+pcHeap = None
+pcTop100 = []
+pcMap = None
+pcUniqueWords = 0
+totalWordCount = 0
+currentFileName = "KJB.txt"
 
-# Precomputed values
-pcHeap = MaxHeap(tokens)
-pcTop100 = pcHeap.top_n(100)
-pcMap = UnorderedMap()
-for token in tokens:
-    pcMap.insert(token)
-pcUniqueWords = pcMap.getSize()
-totalWordCount = len(tokens)
+# Preprocess KJB.txt on startup as default
+def preprocessKJB():
+    global tokens, pcHeap, pcTop100, pcMap, pcUniqueWords, totalWordCount, currentFileName
 
+    defaultFilePath = os.path.join(app.config['UPLOAD_FOLDER'], 'KJB.txt')
+
+    tokens = preprocessText(defaultFilePath)
+    totalWordCount = len(tokens)
+
+    pcHeap = MaxHeap(tokens)
+    pcTop100 = pcHeap.top_n(100)
+    pcMap = initializeUnorderedMap(tokens)
+    pcUniqueWords = pcMap.getSize()
+
+# Call preprocessKJB() during app initialization
+preprocessKJB()
+
+# Handle file uploads and preprocessing
+@app.route('/upload', methods=['POST'])
+def upload():
+    global tokens, pcHeap, pcTop100, pcMap, pcUniqueWords, totalWordCount, currentFileName
+
+    # Ensure a file is included in the request
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided: Please upload a .txt file'}), 400
+
+    file = request.files['file']
+
+    # Check if the file is a .txt file
+    if not file.filename.endswith('.txt'):
+        return jsonify({'error': 'Please only upload a .txt file'}), 400
+
+    # Save the file
+    currentFileName = secure_filename(file.filename)
+    filePath = os.path.join(app.config['UPLOAD_FOLDER'], currentFileName)
+    file.save(filePath)
+
+    # Preprocess the uploaded file
+    tokens = preprocessText(filePath)
+    totalWordCount = len(tokens)
+
+    # Renew precomputed values
+    pcHeap = MaxHeap(tokens)
+    pcTop100 = pcHeap.top_n(100)
+    pcMap = initializeUnorderedMap(tokens)
+    pcUniqueWords = pcMap.getSize()
+
+    return jsonify({'message': f'File uploaded successfully'})
 
 # Display top 100 by default
 @app.route('/')
@@ -79,7 +126,8 @@ def index():
         topWordsDataStructure="maxHeap",
         searchDataStructure="unorderedMap",
         searchQuery="",
-        searchResult=None
+        searchResult=None,
+        currentFileName=currentFileName
     )
 
 @app.route('/refresh', methods=['POST'])

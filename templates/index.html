@@ -1,73 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Word Frequencies in KJV Bible</title>
+    <title>FreQie - The Frequency Analyzer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script>
-        // Refreshes the data structures used based on config input
-        function refreshConfig() {
-            const topWordsDataStructure = document.getElementById('topWordsDataStructure').value;
-            const searchDataStructure = document.getElementById('searchDataStructure').value;
+            // Refreshes the data structures used based on config input
+            function refreshConfig() {
+                const topWordsDataStructure = document.getElementById('topWordsDataStructure').value;
+                const searchDataStructure = document.getElementById('searchDataStructure').value;
 
-            fetch('/refresh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topWordsDataStructure,
-                    searchDataStructure
+                // Refresh fetch request
+                fetch('/refresh', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topWordsDataStructure,
+                        searchDataStructure
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Reformat top words
-                const topWordsContainer = document.getElementById('topWordsContainer');
-                topWordsContainer.innerHTML = '';
+                // Promise to process and dynamically update the top words UI
+                .then(response => response.json())
+                .then(data => {
+                    const topWordsContainer = document.getElementById('topWordsContainer');
+                    topWordsContainer.innerHTML = '';
 
-                data.topWords.forEach((wordPair, index) => {
-                    const wordBox = document.createElement('div');
-                    wordBox.className = 'wordBox';
-                    wordBox.innerHTML = `
-                        <span class="rank">#${index + 1}</span> |
-                        <span class="word">${wordPair[0]}</span> |
-                        <span class="frequency">${wordPair[1]}</span>
-                    `;
-                    topWordsContainer.appendChild(wordBox);
+                    // Fill container with new top words
+                    data.topWords.forEach((wordPair, index) => {
+                        const wordBox = document.createElement('div');
+                        wordBox.className = 'wordBox';
+                        wordBox.innerHTML = `
+                            <span class="rank">#${index + 1}</span> |
+                            <span class="word">${wordPair[0]}</span> |
+                            <span class="frequency">${wordPair[1]}</span>
+                        `;
+                        topWordsContainer.appendChild(wordBox);
+                    });
                 });
-            });
-        }
+            }
 
-        // Displays if word was found in the query
-        function searchWord() {
-            const searchQuery = document.getElementById('searchQuery').value;
-            const searchDataStructure = document.getElementById('searchDataStructure').value;
+            // Displays if word was found in the query
+            function searchWord() {
+                const searchQuery = document.getElementById('searchQuery').value;
+                const searchDataStructure = document.getElementById('searchDataStructure').value;
 
-            fetch('/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    searchQuery,
-                    searchDataStructure
+                // Search fetch request
+                fetch('/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        searchQuery,
+                        searchDataStructure
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const searchResultContainer = document.getElementById('searchResultContainer');
-                searchResultContainer.innerHTML = ''; // Clear existing content
+                // Promise to process search results and update UI
+                .then(response => response.json())
+                .then(data => {
+                    const searchResultContainer = document.getElementById('searchResultContainer');
+                    searchResultContainer.innerHTML = '';
 
-                if (data.searchResult !== null) {
-                    searchResultContainer.innerHTML = `The word "<strong>${data.searchQuery}</strong>" appears <strong>${data.searchResult}</strong> times.`;
-                } else {
-                    searchResultContainer.innerHTML = `The word "<strong>${data.searchQuery}</strong>" was not found.`;
-                }
-            });
-        }
+                    // Display the search result or not found
+                    if (data.searchResult !== null) {
+                        searchResultContainer.innerHTML = `The word "<strong>${data.searchQuery}</strong>" appears <strong>${data.searchResult}</strong> times.`;
+                    } else {
+                        searchResultContainer.innerHTML = `The word "<strong>${data.searchQuery}</strong>" was not found.`;
+                    }
+                });
+            }
+
+            // Function to handle file upload
+            function uploadFile() {
+                const fileInput = document.getElementById('fileInput');
+                const uploadStatus = document.getElementById('uploadStatus');
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                // File upload fetch request
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                // Promise to process upload status
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        // Display error message
+                        uploadStatus.innerHTML = `<p style="color: #ce0303;">${data.error}</p>`;
+                    } else {
+                        // Display success message and reload page
+                        uploadStatus.innerHTML = `<p style="color: #249d3f;">${data.message}</p>`;
+                        location.reload();
+                    }
+                })
+                // Handle fetch errors and display a generic error message
+                .catch(err => {
+                    uploadStatus.innerHTML = `<p style="color: #ce0303;">Error uploading your file.</p>`;
+                });
+            }
     </script>
 </head>
 <body>
-    <h1>Word Frequencies in King James Bible</h1>
+    <h1>FreQie</h1>
+    <h2 id="subtitle">Your one-stop shop for looking at word frequencies in a text!</h2>
 
-    <!-- Unique Words Section -->
+    <hr>
+
+    <!-- Upload Section -->
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="fileInput">Upload a .txt file:</label>
+        <div id="fileUpload"><input type="file" id="fileInput" name="file" accept=".txt"></div>
+        <div>
+            <button type="button" onclick="uploadFile()">Upload</button>
+        </div>
+    </form>
+    <div id="uploadStatus"></div>
+
+    <hr>
+
+    <!-- Text Summary Section -->
     <div id="textSummarySection">
+        <h3><strong>{{ currentFileName }}</strong></h3>
         <p>This text has <strong>{{ totalWordCount }}</strong> words and <strong>{{ uniqueWordCount }}</strong> unique words.</p>
     </div>
 
@@ -97,6 +148,7 @@
         </div>
         {% endfor %}
     </div>
+</body>
 
     <hr>
 
