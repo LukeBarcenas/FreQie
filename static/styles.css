@@ -19,6 +19,10 @@ form {
     margin-bottom: 20px;
 }
 
+#uploadForm, #searchQueryContainer {
+    margin-top: 20px;
+}
+
 label {
     display: block;
     margin-bottom: 8px;
@@ -86,16 +90,18 @@ button:hover {
 
 /* Rank, Word, and Frequency Styles */
 .rank {
+    font-size: 16px;
     font-weight: bold;
     color: #333;
 }
 
 .word {
-    font-size: 18px;
+    font-size: 16px;
     color: #0179fa;
 }
 
 .frequency {
+    font-size: 16px;
     color: #249d3f;
 }
 
