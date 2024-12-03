@@ -115,3 +115,14 @@ button:hover {
 .searchResult strong {
     color: #0179fa;
 }
+
+/* Footer Styles */
+.footer {
+    background-color: #222222;
+    color: #ffffff;
+    text-align: center;
+    padding: 10px 0;
+    margin: 20px 0 0 0;
+    width: 100%;
+    font-size: 14px;
+}
