@@ -58,12 +58,15 @@ def initializeMaxHeap(tokens):
 filePath = 'docs/KJB.txt'
 tokens = preprocessText(filePath)
 
-# Precompute once (Immutable)
+# Precomputed values
 pcHeap = MaxHeap(tokens)
 pcTop100 = pcHeap.top_n(100)
 pcMap = UnorderedMap()
 for token in tokens:
     pcMap.insert(token)
+pcUniqueWords = pcMap.getSize()
+totalWordCount = len(tokens)
+
 
 # Display top 100 by default
 @app.route('/')
@@ -71,6 +74,8 @@ def index():
     return render_template(
         'index.html',
         topWords=pcTop100,
+        uniqueWordCount=pcUniqueWords,
+        totalWordCount=totalWordCount,
         topWordsDataStructure="maxHeap",
         searchDataStructure="unorderedMap",
         searchQuery="",
@@ -79,24 +84,29 @@ def index():
 
 @app.route('/refresh', methods=['POST'])
 def refresh():
-    # Reinitializea  map and heap based on config input
+    # Reinitialize map and heap based on config input
     topWordsDataStructure = request.json.get("topWordsDataStructure", "maxHeap")
     searchDataStructure = request.json.get("searchDataStructure", "unorderedMap")
 
     topWords = []
+    uniqueWordCount = 0
+
     if topWordsDataStructure == "maxHeap":
         heap = MaxHeap(tokens)
         rawTopWords = heap.top_n(100)
         topWords = [(word, freq) for freq, word in rawTopWords]
+        uniqueWordCount = len(set(tokens))
     elif topWordsDataStructure == "unorderedMap":
         umap = UnorderedMap()
         for token in tokens:
             umap.insert(token)
         rawTopWords = umap.getTop100()[:100]
         topWords = rawTopWords
+        uniqueWordCount = umap.getSize()
 
     return jsonify({
         "topWords": topWords,
+        "uniqueWordCount": uniqueWordCount,
         "searchDataStructure": searchDataStructure,
     })
 

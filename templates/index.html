@@ -66,6 +66,13 @@
 <body>
     <h1>Word Frequencies in King James Bible</h1>
 
+    <!-- Unique Words Section -->
+    <div id="textSummarySection">
+        <p>This text has <strong>{{ totalWordCount }}</strong> words and <strong>{{ uniqueWordCount }}</strong> unique words.</p>
+    </div>
+
+    <hr>
+
     <!-- Search Section -->
     <form onsubmit="event.preventDefault(); searchWord();">
         <div>
